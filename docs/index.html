@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cursimple 插件市场</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Cursimple 插件市场</h1>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="browse">浏览</button>
+      <button class="tab" data-tab="manage">管理</button>
+    </nav>
+    <a class="repo-link" href="https://github.com/cursimple/cursimple-plugins" target="_blank" rel="noopener">仓库 ↗</a>
+  </header>
+
+  <main>
+    <section id="view-browse" class="view active">
+      <div id="status-browse" class="status"></div>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section id="view-manage" class="view">
+      <div class="manage-intro">
+        <h2>管理</h2>
+        <p>插件市场的注册表是 <code>plugins.json</code>。只有 <code>cursimple/cursimple-plugins</code> 的协作者能编辑。</p>
+      </div>
+
+      <div class="card">
+        <h3>方式 A · 在 GitHub 网页编辑（推荐）</h3>
+        <p class="muted">点下面按钮直接进 GitHub 的网页编辑器，权限由 GitHub 处理。非协作者会得到 fork &amp; PR 流程。</p>
+        <a class="btn primary" id="btn-edit-on-github" href="#" target="_blank" rel="noopener">在 GitHub 编辑 plugins.json</a>
+      </div>
+
+      <div class="card">
+        <h3>方式 B · 在本页直接编辑</h3>
+        <p class="muted">
+          需要一个 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Fine-grained PAT</a>，
+          授予 <code>cursimple-plugins</code> 仓库的 <strong>Contents: Read &amp; Write</strong> 权限。Token 只保存在你浏览器的 localStorage，不会上传到任何服务器。
+        </p>
+        <div class="token-row">
+          <input id="pat-input" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false" />
+          <button class="btn" id="btn-save-pat">保存</button>
+          <button class="btn ghost" id="btn-clear-pat" hidden>清除</button>
+        </div>
+        <div id="pat-status" class="status"></div>
+
+        <div id="edit-panel" hidden>
+          <h4>添加插件</h4>
+          <div class="add-row">
+            <input id="add-input" type="text" placeholder="cursimple/YangtzU_course_plugin  或  https://github.com/owner/repo" />
+            <button class="btn primary" id="btn-add">添加</button>
+          </div>
+          <h4>已收录</h4>
+          <ul id="manage-list" class="manage-list"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>静态部署于 GitHub Pages · <a href="https://github.com/cursimple/cursimple-plugins" target="_blank" rel="noopener">源码</a></small>
+  </footer>
+
+  <template id="grid-cell-template">
+    <a class="cell" target="_blank" rel="noopener">
+      <div class="cell-head">
+        <img class="avatar" alt="" />
+        <div class="cell-title">
+          <div class="cell-name"></div>
+          <div class="cell-owner"></div>
+        </div>
+      </div>
+      <p class="cell-desc"></p>
+      <div class="cell-meta">
+        <span class="stars">★ <span class="star-count">0</span></span>
+        <span class="lang"></span>
+      </div>
+    </a>
+  </template>
+
+  <script src="./app.js"></script>
+</body>
+</html>
