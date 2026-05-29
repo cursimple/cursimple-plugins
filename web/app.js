@@ -4,9 +4,12 @@ const REGISTRY_OWNER = 'cursimple';
 const REGISTRY_REPO = 'cursimple-plugins';
 const REGISTRY_BRANCH = 'main';
 const REGISTRY_PATH = 'plugins.json';
-const RAW_URL = `https://raw.githubusercontent.com/${REGISTRY_OWNER}/${REGISTRY_REPO}/${REGISTRY_BRANCH}/${REGISTRY_PATH}`;
+const REGISTRY_RAW_URL = `https://raw.githubusercontent.com/${REGISTRY_OWNER}/${REGISTRY_REPO}/${REGISTRY_BRANCH}/${REGISTRY_PATH}`;
 const CONTENTS_API = `https://api.github.com/repos/${REGISTRY_OWNER}/${REGISTRY_REPO}/contents/${REGISTRY_PATH}`;
 const EDIT_ON_GITHUB_URL = `https://github.com/${REGISTRY_OWNER}/${REGISTRY_REPO}/edit/${REGISTRY_BRANCH}/${REGISTRY_PATH}`;
+const STARS_BRANCH = 'plugin-stars-data';
+const STARS_PATH = 'plugins-stars.json';
+const STARS_RAW_URL = `https://raw.githubusercontent.com/${REGISTRY_OWNER}/${REGISTRY_REPO}/${STARS_BRANCH}/${STARS_PATH}`;
 const PAT_STORAGE_KEY = 'cursimple-plugins:pat';
 
 const elements = {};
@@ -235,15 +238,15 @@ async function loadAndRenderBrowse() {
   setStatus(elements.statusBrowse, '加载中...');
   elements.grid.innerHTML = '';
   try {
-    const res = await fetch(`${RAW_URL}?_=${Date.now()}`);
-    if (!res.ok) throw new Error(`无法读取 plugins.json (${res.status})`);
-    const repos = parseRegistry(await res.text());
+    const [repos, starsByRepo] = await Promise.all([fetchRegistry(), fetchPluginStars()]);
     if (repos.length === 0) {
       setStatus(elements.statusBrowse, '注册表为空。', 'success');
       return;
     }
     setStatus(elements.statusBrowse, `共 ${repos.length} 个插件，正在加载元信息...`);
-    const metas = await Promise.all(repos.map((r) => fetchRepoMeta(r).catch(() => placeholderMeta(r))));
+    const metas = await Promise.all(
+      repos.map((r) => fetchRepoMeta(r, starsByRepo).catch(() => placeholderMeta(r, starsByRepo)))
+    );
     metas.forEach((meta) => elements.grid.appendChild(renderCell(meta)));
     setStatus(elements.statusBrowse, '');
   } catch (err) {
@@ -251,7 +254,40 @@ async function loadAndRenderBrowse() {
   }
 }
 
-async function fetchRepoMeta(fullName) {
+async function fetchRegistry() {
+  const res = await fetch(`${REGISTRY_RAW_URL}?_=${Date.now()}`);
+  if (!res.ok) throw new Error(`无法读取 plugins.json (${res.status})`);
+  return parseRegistry(await res.text());
+}
+
+async function fetchPluginStars() {
+  const res = await fetch(`${STARS_RAW_URL}?_=${Date.now()}`);
+  if (!res.ok) throw new Error(`无法读取 plugins-stars.json (${res.status})`);
+  return parsePluginStars(await res.json());
+}
+
+function parsePluginStars(data) {
+  if (!data || !Array.isArray(data.repositories)) {
+    throw new Error('plugins-stars.json 必须包含 repositories 数组');
+  }
+
+  return data.repositories.reduce((starsByRepo, item, index) => {
+    if (!item || typeof item.name !== 'string' || !Number.isInteger(item.star) || item.star < 0) {
+      throw new Error(`plugins-stars.json repositories 第 ${index + 1} 项格式错误`);
+    }
+    starsByRepo.set(item.name, item.star);
+    return starsByRepo;
+  }, new Map());
+}
+
+function getStarCount(fullName, starsByRepo) {
+  if (!starsByRepo.has(fullName)) {
+    throw new Error(`plugins-stars.json 缺少 ${fullName} 的 star 数据`);
+  }
+  return starsByRepo.get(fullName);
+}
+
+async function fetchRepoMeta(fullName, starsByRepo) {
   const pat = localStorage.getItem(PAT_STORAGE_KEY);
   const res = await fetch(`https://api.github.com/repos/${fullName}`, { headers: githubHeaders(pat) });
   if (!res.ok) throw new Error(`GitHub API ${res.status}`);
@@ -262,13 +298,13 @@ async function fetchRepoMeta(fullName) {
     owner: body.owner.login,
     avatar: body.owner.avatar_url,
     description: body.description || '',
-    stars: body.stargazers_count || 0,
+    stars: getStarCount(fullName, starsByRepo),
     language: body.language || '',
     htmlUrl: body.html_url,
   };
 }
 
-function placeholderMeta(fullName) {
+function placeholderMeta(fullName, starsByRepo) {
   const [owner, name] = fullName.split('/');
   return {
     fullName,
@@ -276,7 +312,7 @@ function placeholderMeta(fullName) {
     owner,
     avatar: `https://github.com/${owner}.png?size=80`,
     description: '（无法加载仓库元信息，可能受 API 速率限制）',
-    stars: 0,
+    stars: getStarCount(fullName, starsByRepo),
     language: '',
     htmlUrl: `https://github.com/${fullName}`,
   };
