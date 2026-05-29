@@ -41,27 +41,18 @@ jobs:
 
           tmp_dir="$(mktemp -d)"
           cp "$TARGET_FILE" "$tmp_dir/$TARGET_FILE"
+          rm -f "$TARGET_FILE"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git ls-remote --exit-code --heads origin "$TARGET_BRANCH" > /dev/null 2>&1; then
-            git fetch origin "$TARGET_BRANCH:$TARGET_BRANCH"
-            git switch "$TARGET_BRANCH"
-          else
-            git switch --orphan "$TARGET_BRANCH"
-            git rm -rf --ignore-unmatch .
-          fi
+          git switch --orphan "$TARGET_BRANCH"
+          git rm -rf --ignore-unmatch .
 
           cp "$tmp_dir/$TARGET_FILE" "$TARGET_FILE"
           git add "$TARGET_FILE"
 
-          if git diff --cached --quiet; then
-            echo "No changes to publish."
-            exit 0
-          fi
-
           git commit \
-            -m "chore: update plugin stars data" \
-            -m "- Overwrite plugins-stars.json with latest repository metrics"
-          git push origin "$TARGET_BRANCH"
+            -m "chore: 覆盖插件星标数据" \
+            -m "- 使用最新生成的 plugins-stars.json 覆盖数据分支"
+          git push --force origin HEAD:"$TARGET_BRANCH"
