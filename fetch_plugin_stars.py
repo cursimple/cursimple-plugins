@@ -11,7 +11,6 @@ import json
 import os
 import sys
 import tempfile
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -24,10 +23,6 @@ DEFAULT_SOURCE_URL = (
 )
 DEFAULT_OUTPUT = "plugins-stars.json"
 GRAPHQL_URL = "https://api.github.com/graphql"
-
-
-def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
 def request_json(url: str, *, token: str | None = None, payload: dict[str, Any] | None = None) -> Any:
@@ -84,14 +79,6 @@ def build_query(repo_names: list[str]) -> str:
     repo{index:03d}: repository(owner: {json.dumps(owner)}, name: {json.dumps(name)}) {{
       nameWithOwner
       stargazerCount
-      forkCount
-      createdAt
-      updatedAt
-      description
-      issues(states: OPEN) {{ totalCount }}
-      watchers {{ totalCount }}
-      primaryLanguage {{ name }}
-      licenseInfo {{ name spdxId }}
     }}"""
         )
 
@@ -110,22 +97,10 @@ def build_query(repo_names: list[str]) -> str:
     )
 
 
-def repository_from_graphql(value: dict[str, Any], source_order: int) -> dict[str, Any]:
-    primary_language = value.get("primaryLanguage")
-    license_info = value.get("licenseInfo")
-
+def repository_from_graphql(value: dict[str, Any]) -> dict[str, Any]:
     return {
         "name": value["nameWithOwner"],
-        "stars": value["stargazerCount"],
-        "forks": value.get("forkCount", 0),
-        "open_issues": value.get("issues", {}).get("totalCount", 0),
-        "watchers": value.get("watchers", {}).get("totalCount", 0),
-        "language": primary_language["name"] if primary_language else "Unknown",
-        "license": license_info["spdxId"] if license_info else "Unknown",
-        "created_at": value.get("createdAt", ""),
-        "updated_at": value.get("updatedAt", ""),
-        "description": value.get("description") or "",
-        "source_order": source_order,
+        "star": value["stargazerCount"],
     }
 
 
@@ -148,7 +123,7 @@ def fetch_repo_batch(repo_names: list[str], token: str) -> tuple[list[dict[str, 
         value = data.get(key)
         if value is None:
             raise RuntimeError(f"GitHub GraphQL returned no data for {repo_names[index - 1]}")
-        repositories.append(repository_from_graphql(value, source_order=index))
+        repositories.append(repository_from_graphql(value))
 
     rate_limit = data.get("rateLimit")
     if not isinstance(rate_limit, dict):
@@ -190,8 +165,7 @@ def write_json_file(path: Path, data: dict[str, Any]) -> None:
         prefix=f".{path.name}.",
         suffix=".tmp",
     ) as temp_file:
-        json.dump(data, temp_file, ensure_ascii=False, indent=2)
-        temp_file.write("\n")
+        json.dump(data, temp_file, ensure_ascii=False, separators=(",", ":"))
         temp_name = temp_file.name
 
     Path(temp_name).replace(path)
@@ -222,20 +196,10 @@ def main() -> int:
     repo_names = load_repo_names(args.source_url)
     print(f"Loaded {len(repo_names)} repositories from {args.source_url}")
 
-    repositories, rate_limits = fetch_all_repos(repo_names, token, args.batch_size)
-    repositories_by_stars = sorted(repositories, key=lambda item: item["stars"], reverse=True)
-    total_stars = sum(item["stars"] for item in repositories)
+    repositories, _rate_limits = fetch_all_repos(repo_names, token, args.batch_size)
+    repositories_by_stars = sorted(repositories, key=lambda item: item["star"], reverse=True)
 
     output = {
-        "generated_at": utc_now_iso(),
-        "source": {
-            "url": args.source_url,
-            "count": len(repo_names),
-        },
-        "repository_count": len(repositories),
-        "total_stars": total_stars,
-        "average_stars": round(total_stars / len(repositories)) if repositories else 0,
-        "rate_limits": rate_limits,
         "repositories": repositories_by_stars,
     }
 
