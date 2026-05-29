@@ -18,12 +18,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 
@@ -50,7 +50,7 @@ jobs:
             git switch "$TARGET_BRANCH"
           else
             git switch --orphan "$TARGET_BRANCH"
-            git rm -rf .
+            git rm -rf --ignore-unmatch .
           fi
 
           cp "$tmp_dir/$TARGET_FILE" "$TARGET_FILE"
