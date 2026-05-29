@@ -32,33 +32,9 @@
       </div>
 
       <div class="card">
-        <h3>方式 A · 在 GitHub 网页编辑（推荐）</h3>
+        <h3>在 GitHub 网页编辑</h3>
         <p class="muted">点下面按钮直接进 GitHub 的网页编辑器，权限由 GitHub 处理。非协作者会得到 fork &amp; PR 流程。</p>
         <a class="btn primary" id="btn-edit-on-github" href="#" target="_blank" rel="noopener">在 GitHub 编辑 plugins.json</a>
-      </div>
-
-      <div class="card">
-        <h3>方式 B · 在本页直接编辑</h3>
-        <p class="muted">
-          需要一个 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Fine-grained PAT</a>，
-          授予 <code>cursimple-plugins</code> 仓库的 <strong>Contents: Read &amp; Write</strong> 权限。Token 只保存在你浏览器的 localStorage，不会上传到任何服务器。
-        </p>
-        <div class="token-row">
-          <input id="pat-input" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false" />
-          <button class="btn" id="btn-save-pat">保存</button>
-          <button class="btn ghost" id="btn-clear-pat" hidden>清除</button>
-        </div>
-        <div id="pat-status" class="status"></div>
-
-        <div id="edit-panel" hidden>
-          <h4>添加插件</h4>
-          <div class="add-row">
-            <input id="add-input" type="text" placeholder="cursimple/YangtzU_course_plugin  或  https://github.com/owner/repo" />
-            <button class="btn primary" id="btn-add">添加</button>
-          </div>
-          <h4>已收录</h4>
-          <ul id="manage-list" class="manage-list"></ul>
-        </div>
       </div>
     </section>
   </main>

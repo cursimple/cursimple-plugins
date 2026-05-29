@@ -205,32 +205,8 @@ main {
 }
 
 .card h3 { margin: 0 0 4px 0; font-size: 15px; }
-.card h4 { margin: 20px 0 8px 0; font-size: 14px; color: var(--muted); }
 .card .muted { color: var(--muted); font-size: 13px; margin: 4px 0 16px 0; }
 .card a { color: var(--primary); }
-
-.token-row, .add-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-input[type="text"], input[type="password"] {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: var(--text);
-  font-size: 14px;
-  font-family: inherit;
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(47, 129, 247, 0.2);
-}
 
 .btn {
   background: var(--surface-2);
@@ -260,22 +236,6 @@ input:focus {
 .btn.primary:hover { background: var(--primary-hover); }
 
 .btn.ghost { background: none; }
-.btn.danger { color: var(--danger); }
-.btn.danger:hover { background: rgba(248, 81, 73, 0.1); border-color: var(--danger); }
-
-.manage-list { list-style: none; padding: 0; margin: 0; }
-
-.manage-list li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 8px;
-}
-
-.manage-list .repo { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; flex: 1; }
 
 footer {
   text-align: center;

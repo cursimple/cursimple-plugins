@@ -78,7 +78,17 @@ def build_query(repo_names: list[str]) -> str:
             f"""
     repo{index:03d}: repository(owner: {json.dumps(owner)}, name: {json.dumps(name)}) {{
       nameWithOwner
+      name
+      owner {{
+        login
+        avatarUrl(size: 80)
+      }}
+      description
       stargazerCount
+      primaryLanguage {{
+        name
+      }}
+      url
     }}"""
         )
 
@@ -98,9 +108,18 @@ def build_query(repo_names: list[str]) -> str:
 
 
 def repository_from_graphql(value: dict[str, Any]) -> dict[str, Any]:
+    owner = value["owner"]
+    primary_language = value["primaryLanguage"]
+
     return {
         "name": value["nameWithOwner"],
+        "repo": value["name"],
+        "owner": owner["login"],
+        "avatar": owner["avatarUrl"],
+        "description": value["description"] or "",
         "star": value["stargazerCount"],
+        "language": primary_language["name"] if primary_language else "",
+        "url": value["url"],
     }
 
 
