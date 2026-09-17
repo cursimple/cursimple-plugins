@@ -41,7 +41,7 @@
 
 | 插件仓库 | 说明 |
 |---------|------|
-| [cursimple/YangtzU_course_plugin](https://github.com/cursimple/YangtzU_course_plugin) | 扬州大学课程插件 |
+| [cursimple/YangtzU_course_plugin](https://github.com/cursimple/YangtzU_course_plugin) | 长江大学课程插件 |
 
 > 💡 插件列表会定期自动更新星标等元数据。
 

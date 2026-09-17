@@ -44,12 +44,17 @@ function parseRegistry(text) {
   const data = JSON.parse(text);
   if (!Array.isArray(data)) throw new Error('plugins.json 必须是数组');
   const seen = new Set();
-  return data.filter((item) => {
-    if (typeof item !== 'string') return false;
-    if (seen.has(item)) return false;
-    seen.add(item);
-    return true;
-  });
+  const repos = [];
+  for (const item of data) {
+    // 两种写法都认：早期是 "owner/repo" 字符串，现在是带 schools 的对象
+    const repo = typeof item === 'string' ? item : item && item.repo;
+    if (typeof repo !== 'string') continue;
+    const name = repo.trim();
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    repos.push(name);
+  }
+  return repos;
 }
 
 async function loadAndRenderBrowse() {
