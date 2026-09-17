@@ -59,3 +59,13 @@ jobs:
             -m "chore: 覆盖插件星标数据" \
             -m "- 使用最新生成的 plugins-stars.json 覆盖数据分支"
           git push --force origin HEAD:"$TARGET_BRANCH"
+
+      # 数据分支推完不清缓存的话，jsDelivr 还会发十几个小时的旧数据。
+      # App 读这份清单优先走 jsDelivr，不清就等于改了没生效。
+      - name: Purge jsDelivr cache
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          url="https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@plugin-stars-data/plugins-stars.json"
+          echo "Purging $url"
+          curl -sS --max-time 60 "$url" || echo "Purge request failed; jsDelivr will catch up on its own TTL."
