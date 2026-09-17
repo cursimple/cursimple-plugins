@@ -1,3 +1,14 @@
 [
-  "cursimple/YangtzU_course_plugin"
+  {
+    "repo": "cursimple/YangtzU_course_plugin",
+    "schools": [
+      "长江大学",
+      "长大",
+      "changjiangdaxue",
+      "changjiang",
+      "cjdx",
+      "YangtzU",
+      "Yangtze University"
+    ]
+  }
 ]

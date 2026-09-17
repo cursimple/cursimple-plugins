@@ -54,15 +54,43 @@
 ### 方法一：直接编辑（需协作者权限）
 
 1. 点击 [在 GitHub 编辑 plugins.json](https://github.com/cursimple/cursimple-plugins/edit/main/plugins.json)
-2. 在 JSON 数组中添加你的插件仓库地址（格式：`"owner/repo"`）
+2. 在 JSON 数组中添加你的插件（格式见下方「条目格式」）
 3. 提交更改
 
 ### 方法二：提交 Pull Request（推荐）
 
 1. Fork 本仓库
-2. 在 `plugins.json` 中添加你的插件仓库地址
+2. 在 `plugins.json` 中添加你的插件
 3. 提交 Pull Request
 4. 等待审核合并
+
+### 条目格式
+
+推荐写成对象，并用 `schools` 声明这个插件覆盖的学校：
+
+```json
+[
+  {
+    "repo": "cursimple/YangtzU_course_plugin",
+    "schools": ["长江大学", "长大", "changjiangdaxue", "cjdx", "YangtzU"]
+  }
+]
+```
+
+课简的「从教务系统导课」页让学生**按学校名搜索**插件。仓库名多半是英文缩写（`YangtzU_course_plugin`），学生搜的却是「长江大学」，两者对不上就找不到你的插件，所以请把下面这些都列进 `schools`：
+
+- 学校全称：`长江大学`
+- 常用简称：`长大`
+- 拼音全拼和首字母：`changjiangdaxue`、`cjdx`
+- 英文名或缩写：`YangtzU`、`Yangtze University`
+
+匹配规则是**忽略大小写的子串匹配，前缀也算命中**——打到「长江」就能出来，不必打完。App 不做拼音转换，要支持拼音就直接把拼音写成一条别名。
+
+只写仓库名的旧格式仍然有效，但这样只能靠仓库名和简介被搜到：
+
+```json
+["cursimple/YangtzU_course_plugin"]
+```
 
 ### 插件要求
 
@@ -92,7 +120,7 @@ cursimple-plugins/
 
 ### 工作原理
 
-1. **插件注册**：插件信息存储在 `plugins.json` 中，格式为 GitHub 仓库的 `"owner/repo"` 字符串数组
+1. **插件注册**：插件信息存储在 `plugins.json` 中，每条为 `{"repo": "owner/repo", "schools": [...]}` 对象（也兼容旧的 `"owner/repo"` 纯字符串）；`schools` 会原样写进 `plugins-stars.json`，供 App 按学校名搜索
 2. **数据更新**：GitHub Actions 每 6 小时自动运行一次，获取所有插件的星标等元数据
 3. **页面展示**：静态页面从 GitHub 读取数据并展示插件列表
 

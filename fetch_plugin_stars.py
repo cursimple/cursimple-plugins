@@ -1,7 +1,18 @@
 """
 Fetch GitHub repository metrics for cursimple plugins and write them to JSON.
 
-The source plugins.json is expected to be a JSON array of "owner/repo" strings.
+The source plugins.json is a JSON array whose items are either:
+
+* "owner/repo" — just the repository, no extra metadata; or
+* {"repo": "owner/repo", "schools": ["长江大学", "长大", "changjiang"]} — the
+  repository plus the school names it covers.
+
+"schools" is what the app searches when a student types their school name. A
+repository is usually named in English ("YangtzU_course_plugin") while students
+search in Chinese, so list the full name, the common short forms and the pinyin
+here; the app matches them as plain case-insensitive substrings and does no
+pinyin conversion of its own. Adding a school is a registry edit, not an app
+release.
 """
 
 from __future__ import annotations
@@ -48,25 +59,46 @@ def request_json(url: str, *, token: str | None = None, payload: dict[str, Any] 
         raise RuntimeError(f"Failed to request {url}: {exc.reason}") from exc
 
 
-def load_repo_names(source_url: str) -> list[str]:
+def load_repo_entries(source_url: str) -> tuple[list[str], dict[str, list[str]]]:
+    """Return the repository names and, per repository, its declared schools."""
     data = request_json(source_url)
 
     if not isinstance(data, list):
         raise ValueError("plugins.json must be a JSON array")
 
     repo_names: list[str] = []
-    for index, item in enumerate(data, start=1):
-        if not isinstance(item, str):
-            raise ValueError(f"plugins.json item #{index} must be a string")
+    schools_by_repo: dict[str, list[str]] = {}
 
-        repo_name = item.strip()
+    for index, item in enumerate(data, start=1):
+        if isinstance(item, str):
+            repo_name = item.strip()
+            schools: list[str] = []
+        elif isinstance(item, dict):
+            raw_repo = item.get("repo")
+            if not isinstance(raw_repo, str):
+                raise ValueError(f"plugins.json item #{index} must carry a string \"repo\"")
+            repo_name = raw_repo.strip()
+            raw_schools = item.get("schools", [])
+            if not isinstance(raw_schools, list):
+                raise ValueError(f"plugins.json item #{index} must carry a list \"schools\"")
+            schools = []
+            for school in raw_schools:
+                if not isinstance(school, str):
+                    raise ValueError(f"plugins.json item #{index} has a non-string school")
+                name = school.strip()
+                if name and name not in schools:
+                    schools.append(name)
+        else:
+            raise ValueError(f"plugins.json item #{index} must be a string or an object")
+
         parts = repo_name.split("/")
         if len(parts) != 2 or not all(parts):
             raise ValueError(f"plugins.json item #{index} must use owner/repo format: {item!r}")
 
         repo_names.append(repo_name)
+        schools_by_repo[repo_name] = schools
 
-    return repo_names
+    return repo_names, schools_by_repo
 
 
 def build_query(repo_names: list[str]) -> str:
@@ -107,12 +139,16 @@ def build_query(repo_names: list[str]) -> str:
     )
 
 
-def repository_from_graphql(value: dict[str, Any]) -> dict[str, Any]:
+def repository_from_graphql(
+    value: dict[str, Any],
+    schools_by_repo: dict[str, list[str]] | None = None,
+) -> dict[str, Any]:
     owner = value["owner"]
     primary_language = value["primaryLanguage"]
+    name_with_owner = value["nameWithOwner"]
 
-    return {
-        "name": value["nameWithOwner"],
+    repository = {
+        "name": name_with_owner,
         "repo": value["name"],
         "owner": owner["login"],
         "avatar": owner["avatarUrl"],
@@ -122,8 +158,20 @@ def repository_from_graphql(value: dict[str, Any]) -> dict[str, Any]:
         "url": value["url"],
     }
 
+    # Omit the key entirely when no school is declared, so entries that opt out
+    # stay byte-identical to what earlier versions of this script produced.
+    schools = (schools_by_repo or {}).get(name_with_owner) or []
+    if schools:
+        repository["schools"] = schools
 
-def fetch_repo_batch(repo_names: list[str], token: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    return repository
+
+
+def fetch_repo_batch(
+    repo_names: list[str],
+    token: str,
+    schools_by_repo: dict[str, list[str]] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     response = request_json(GRAPHQL_URL, token=token, payload={"query": build_query(repo_names)})
 
     if not isinstance(response, dict):
@@ -142,7 +190,7 @@ def fetch_repo_batch(repo_names: list[str], token: str) -> tuple[list[dict[str, 
         value = data.get(key)
         if value is None:
             raise RuntimeError(f"GitHub GraphQL returned no data for {repo_names[index - 1]}")
-        repositories.append(repository_from_graphql(value))
+        repositories.append(repository_from_graphql(value, schools_by_repo))
 
     rate_limit = data.get("rateLimit")
     if not isinstance(rate_limit, dict):
@@ -151,7 +199,12 @@ def fetch_repo_batch(repo_names: list[str], token: str) -> tuple[list[dict[str, 
     return repositories, rate_limit
 
 
-def fetch_all_repos(repo_names: list[str], token: str, batch_size: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def fetch_all_repos(
+    repo_names: list[str],
+    token: str,
+    batch_size: int,
+    schools_by_repo: dict[str, list[str]] | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     repositories: list[dict[str, Any]] = []
     rate_limits: list[dict[str, Any]] = []
 
@@ -160,7 +213,7 @@ def fetch_all_repos(repo_names: list[str], token: str, batch_size: int) -> tuple
         batch_number = start // batch_size + 1
         print(f"Fetching batch {batch_number}: {len(batch)} repositories")
 
-        batch_repositories, rate_limit = fetch_repo_batch(batch, token)
+        batch_repositories, rate_limit = fetch_repo_batch(batch, token, schools_by_repo)
         repositories.extend(batch_repositories)
         rate_limits.append(rate_limit)
 
@@ -212,10 +265,16 @@ def main() -> int:
         print("--batch-size must be between 1 and 100", file=sys.stderr)
         return 1
 
-    repo_names = load_repo_names(args.source_url)
-    print(f"Loaded {len(repo_names)} repositories from {args.source_url}")
+    repo_names, schools_by_repo = load_repo_entries(args.source_url)
+    tagged = sum(1 for schools in schools_by_repo.values() if schools)
+    print(
+        f"Loaded {len(repo_names)} repositories from {args.source_url} "
+        f"({tagged} with declared schools)"
+    )
 
-    repositories, _rate_limits = fetch_all_repos(repo_names, token, args.batch_size)
+    repositories, _rate_limits = fetch_all_repos(
+        repo_names, token, args.batch_size, schools_by_repo
+    )
     repositories_by_stars = sorted(repositories, key=lambda item: item["star"], reverse=True)
 
     output = {
