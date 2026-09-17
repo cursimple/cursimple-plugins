@@ -39,9 +39,9 @@ Visit the [Plugin Marketplace](https://cursimple.github.io/cursimple-plugins/) t
 
 ## 📋 Currently Listed Plugins
 
-| Plugin Repository | Description |
-|------------------|-------------|
-| [cursimple/YangtzU_course_plugin](https://github.com/cursimple/YangtzU_course_plugin) | Yangzhou University Course Plugin |
+| Plugin Repository | Schools Covered |
+|------------------|-----------------|
+| [cursimple/YangtzU_course_plugin](https://github.com/cursimple/YangtzU_course_plugin) | 长江大学 / 长大 / changjiangdaxue / changjiang / cjdx / YangtzU / Yangtze University |
 
 > 💡 The plugin list is automatically updated with star counts and other metadata periodically.
 

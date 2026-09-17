@@ -39,9 +39,9 @@
 
 ## 📋 当前收录的插件
 
-| 插件仓库 | 说明 |
-|---------|------|
-| [cursimple/YangtzU_course_plugin](https://github.com/cursimple/YangtzU_course_plugin) | 长江大学课程插件 |
+| 插件仓库 | 覆盖学校 |
+|---------|---------|
+| [cursimple/YangtzU_course_plugin](https://github.com/cursimple/YangtzU_course_plugin) | 长江大学 / 长大 / changjiangdaxue / changjiang / cjdx / YangtzU / Yangtze University |
 
 > 💡 插件列表会定期自动更新星标等元数据。
 

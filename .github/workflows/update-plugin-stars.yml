@@ -35,6 +35,27 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python fetch_plugin_stars.py --output plugins-stars.json
 
+      # 收录表以前是手写的，两个语言版本都把长江大学写成了扬州大学。
+      # plugins.json 里已经有权威的学校名，表就从它生成，不再有对不上的可能。
+      #
+      # 这一步会往 main 推提交，但用的是默认 GITHUB_TOKEN——它推的 push 不会再触发
+      # 工作流，所以不会自激。将来若换成 PAT，这里就得加 [skip ci] 之类的护栏。
+      # 失败不阻断后面的数据发布：收录表只是文档，插件清单才是正事。
+      - name: Sync README plugin table
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python render_readme_table.py
+          if [ -n "$(git status --porcelain README.md README_EN.md)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add README.md README_EN.md
+            git commit -m "chore: 按 plugins.json 同步收录表"
+            git push origin HEAD:main
+          else
+            echo "README plugin table already matches plugins.json"
+          fi
+
       - name: Publish data branch
         env:
           TARGET_BRANCH: plugin-stars-data
