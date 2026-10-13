@@ -1,65 +1,86 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cursimple 插件市场</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>课简 · 插件收录</title>
+  <meta name="description" content="浏览课简导课插件：按学校名搜索，查看适配学校、安装方式和仓库，提交你的学校插件。">
+  <meta name="theme-color" content="#3fa277">
+  <link rel="icon" href="assets/icon.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="catalog.js" defer></script>
+  <script src="i18n.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="topbar">
-    <div class="brand">
-      <span class="dot"></span>
-      <h1>Cursimple 插件市场</h1>
+    <div class="topbar-inner">
+      <a class="brand" href="./"><img src="assets/icon.png" alt="" width="36" height="36"><strong data-i18n="brand">课简插件</strong></a>
+      <nav class="top-links" aria-label="Links">
+        <a href="https://cursimple.github.io/cursimple-app/" data-i18n="app">课简官网</a>
+        <a href="https://cursimple.github.io/cursimple-components/" data-i18n="components">扩展组件</a>
+        <a href="https://github.com/cursimple/cursimple-plugins" data-i18n="source">插件仓库</a>
+      </nav>
+      <select id="language" aria-label="Language / 语言">
+        <option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option>
+      </select>
     </div>
-    <nav class="tabs">
-      <button class="tab active" data-tab="browse">浏览</button>
-      <button class="tab" data-tab="manage">管理</button>
-    </nav>
-    <a class="repo-link" href="https://github.com/cursimple/cursimple-plugins" target="_blank" rel="noopener">仓库 ↗</a>
   </header>
-
-  <main>
-    <section id="view-browse" class="view active">
-      <div id="status-browse" class="status"></div>
+  <main id="main" class="wrap">
+    <section class="intro">
+      <span class="eyebrow" data-i18n="eyebrow">CURSIMPLE PLUGINS</span>
+      <h1 data-i18n="heading">登录教务，把课表导进课简</h1>
+      <p data-i18n="intro">每所学校由独立插件适配。搜索你的学校，安装对应插件，登录教务系统后课表会自动导入。</p>
+    </section>
+    <div class="tabs" role="tablist" aria-label="Catalog">
+      <button id="browse-tab" role="tab" aria-selected="true" aria-controls="browse-panel" data-panel="browse-panel" data-i18n="browse">浏览插件</button>
+      <button id="submit-tab" role="tab" aria-selected="false" aria-controls="submit-panel" tabindex="-1" data-panel="submit-panel" data-i18n="submit">提交收录</button>
+    </div>
+    <section id="browse-panel" role="tabpanel" aria-labelledby="browse-tab">
+      <div class="search-row">
+        <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" autocomplete="off" placeholder="搜索学校名、拼音或缩写" aria-label="搜索学校名、拼音或缩写"></label>
+        <button id="refresh" class="icon-button" aria-label="刷新插件" title="刷新插件"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8a8 8 0 1 0 1 7M19 3v5h-5"/></svg></button>
+      </div>
+      <p id="count" class="count" aria-live="polite" data-i18n="loading">正在加载插件…</p>
+      <p id="status" class="status" role="status" hidden></p>
       <div id="grid" class="grid"></div>
+      <p id="empty" class="empty" hidden></p>
+      <details class="installation"><summary data-i18n="installationTitle">在课简中安装</summary>
+        <p data-i18n="installation">打开课简的「从教务系统导课」，搜索学校名并安装对应插件，插件装好会自动启用。也可以从插件仓库的 Release 下载插件 ZIP，再用「导入 ZIP」安装。</p>
+        <p class="muted" data-i18n="compatibility">导入时在插件页面登录学校教务系统，账号只提交给学校。兼容版本以插件详情为准；学校系统改版后，插件需要更新才能继续导入。</p>
+      </details>
     </section>
-
-    <section id="view-manage" class="view">
-      <div class="manage-intro">
-        <h2>管理</h2>
-        <p>插件市场的注册表是 <code>plugins.json</code>。只有 <code>cursimple/cursimple-plugins</code> 的协作者能编辑。</p>
-      </div>
-
-      <div class="card">
-        <h3>在 GitHub 网页编辑</h3>
-        <p class="muted">点下面按钮直接进 GitHub 的网页编辑器，权限由 GitHub 处理。非协作者会得到 fork &amp; PR 流程。</p>
-        <a class="btn primary" id="btn-edit-on-github" href="#" target="_blank" rel="noopener">在 GitHub 编辑 plugins.json</a>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <small>静态部署于 GitHub Pages · <a href="https://github.com/cursimple/cursimple-plugins" target="_blank" rel="noopener">源码</a></small>
-  </footer>
-
-  <template id="grid-cell-template">
-    <a class="cell" target="_blank" rel="noopener">
-      <div class="cell-head">
-        <img class="avatar" alt="" />
-        <div class="cell-title">
-          <div class="cell-name"></div>
-          <div class="cell-owner"></div>
+    <section id="submit-panel" role="tabpanel" aria-labelledby="submit-tab" hidden>
+      <div class="submission">
+        <h2 data-i18n="submitTitle">把你的插件加入收录</h2>
+        <p data-i18n="submitIntro">网页和课简的导课页共用 plugins.json。提交仓库地址和覆盖的学校，合并后由工作流更新收录资料。</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/cursimple/cursimple-plugins/edit/main/plugins.json" data-i18n="edit">在 GitHub 编辑</a>
+          <a class="button" href="https://github.com/cursimple/cursimple-plugins#-如何提交插件" id="contribution-link" data-i18n="pullRequest">查看贡献说明</a>
         </div>
+        <h3 data-i18n="requirements">准备插件包</h3>
+        <p data-i18n="requirementsText">插件仓库需公开托管在 GitHub。Release 附件需要同时上传插件 ZIP 与下载清单 manifest.json，清单里的 filename 要和 ZIP 文件名一致。</p>
+        <h3 data-i18n="format">注册条目示例</h3>
+        <pre><code>{
+  "repo": "your-name/your-school-plugin",
+  "schools": ["示例大学", "示大", "shilidaxue", "sldx", "Example University"]
+}</code></pre>
+        <p data-i18n="schoolsTip">schools 请写全学校全称、常用简称、拼音全拼与首字母、英文名或缩写。课简按子串匹配搜索，不做拼音转换。</p>
+        <a class="text-link" href="https://github.com/cursimple/cursimple-app/blob/main/docs/plugin-system.md" data-i18n="developer">插件开发指南</a>
       </div>
-      <p class="cell-desc"></p>
-      <div class="cell-meta">
-        <span class="stars">★ <span class="star-count">0</span></span>
-        <span class="lang"></span>
-      </div>
-    </a>
+    </section>
+    <noscript><p>插件列表需要 JavaScript。<a href="https://github.com/cursimple/YangtzU_course_plugin">长江大学</a> · <a href="https://github.com/cursimple/cursimple-plugins">插件仓库</a></p></noscript>
+  </main>
+  <footer class="wrap"><p data-i18n="privacy">本网页只用于浏览收录资料；教务登录与导课在课简中完成，安装操作在课简或 GitHub 中完成。</p><span>CurSimple · MIT License · <a href="https://github.com/cursimple/cursimple-plugins" data-i18n="source">插件仓库</a></span></footer>
+  <template id="plugin-template">
+    <article class="plugin">
+      <div class="plugin-head"><img class="avatar" width="44" height="44" alt="" loading="lazy"><div><h2 class="plugin-name"></h2><p class="repository"></p></div></div>
+      <p class="description"></p>
+      <div class="aliases" aria-label="覆盖学校与别名"></div>
+      <div class="metadata"><span class="stars"></span><span class="code-language"></span></div>
+      <div class="actions"><a class="button primary" data-action="repo" target="_blank" rel="noopener noreferrer"></a><a class="button" data-action="releases" target="_blank" rel="noopener noreferrer"></a></div>
+    </article>
   </template>
-
-  <script src="./app.js"></script>
 </body>
 </html>

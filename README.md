@@ -110,9 +110,13 @@ cursimple-plugins/
 │   └── workflows/
 │       └── update-plugin-stars.yml  # 自动更新星标数据的 GitHub Actions
 ├── docs/
-│   ├── index.html                   # 插件市场页面
-│   ├── style.css                    # 页面样式
-│   └── app.js                       # 页面逻辑
+│   ├── index.html                   # 插件收录页面（与组件收录页同一套样式）
+│   ├── style.css                    # 页面样式，深浅色跟随系统
+│   ├── app.js                       # 页面逻辑：加载、搜索、切换语言
+│   ├── catalog.js                   # 注册表解析与搜索
+│   ├── i18n.js                      # 简体、繁体、英文文案
+│   ├── assets/                      # 图标
+│   └── tests/                       # node --test docs/tests/*.test.cjs
 ├── plugins.json                     # 插件注册表（核心文件）
 ├── fetch_plugin_stars.py            # 获取插件星标数据的脚本
 └── LICENSE                          # MIT 许可证

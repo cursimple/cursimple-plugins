@@ -82,9 +82,13 @@ cursimple-plugins/
 │   └── workflows/
 │       └── update-plugin-stars.yml  # GitHub Actions for auto-updating star data
 ├── docs/
-│   ├── index.html                   # Plugin marketplace page
-│   ├── style.css                    # Page styles
-│   └── app.js                       # Page logic
+│   ├── index.html                   # Plugin catalog page (same design as the component catalog)
+│   ├── style.css                    # Page styles with light and dark themes
+│   ├── app.js                       # Page logic: loading, search and language switching
+│   ├── catalog.js                   # Registry parsing and search
+│   ├── i18n.js                      # Simplified Chinese, Traditional Chinese and English text
+│   ├── assets/                      # Icon
+│   └── tests/                       # node --test docs/tests/*.test.cjs
 ├── plugins.json                     # Plugin registry (core file)
 ├── fetch_plugin_stars.py            # Script to fetch plugin star data
 └── LICENSE                          # MIT License
